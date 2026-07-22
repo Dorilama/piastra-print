@@ -46,7 +46,7 @@ const App = struct {
 };
 
 const dev_origins = [_][]const u8{ "zero://app", "zero://inline", "http://127.0.0.1:5173" };
-const bridge_origins = [_][]const u8{ "zero://app", "http://127.0.0.1:5173" };
+const bridge_origins = [_][]const u8{ "zero://app", "zero://inline", "http://127.0.0.1:5173" };
 
 const app_bridge_commands = [_]native_sdk.BridgeCommandPolicy{
     .{ .name = "app.writeSvg", .origins = &bridge_origins },
