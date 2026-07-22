@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
 
 /* The live preview scales large SVGs to fit its box; the downloaded file
    keeps the real dimensions. */

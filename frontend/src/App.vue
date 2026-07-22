@@ -3,6 +3,7 @@ import { reactive, watch, computed, ref } from "vue";
 import { buildSvg, defaultParams, type Params } from "./lib/svg.js";
 import { loadConfig, saveConfig, mergeConfig } from "./lib/config.js";
 import StrokeControls from "./components/StrokeControls.vue";
+import { setTheme, type Theme } from "./lib/theme.js";
 
 // Restore the last-used configuration across relaunches (localStorage).
 const params = reactive<Params>(loadConfig());
@@ -107,6 +108,13 @@ function onImportFile(e: Event) {
 function reset() {
   Object.assign(params, defaultParams);
 }
+
+const theme = ref<Theme>(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+function toggleTheme() {
+  const next: Theme = theme.value === "dark" ? "light" : "dark";
+  theme.value = next;
+  setTheme(next);
+}
 </script>
 
 <template>
@@ -120,6 +128,10 @@ function reset() {
             <p class="text-base-content/60 text-sm">Grid generator — geometry and stroke styles, fully editable.</p>
           </div>
           <div class="flex gap-1">
+            <button class="btn btn-ghost btn-sm btn-circle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'" aria-label="Toggle color theme">
+              <svg v-if="theme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7m12.72 0l-.7-.7M6.34 6.34l-.7-.7M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+            </button>
             <button class="btn btn-ghost btn-sm" @click="importInput?.click()">Import</button>
             <button class="btn btn-ghost btn-sm" @click="exportConfig">Export</button>
             <button class="btn btn-ghost btn-sm" @click="reset">Reset</button>
