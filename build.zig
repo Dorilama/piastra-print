@@ -104,6 +104,10 @@ pub fn build(b: *std.Build) void {
     const app_mod = localModule(b, target, optimize, "src/main.zig");
     app_mod.addImport("native_sdk", native_sdk_mod);
     app_mod.addImport("runner", runner_mod);
+    // Embed the Windows application manifest (DPI awareness + themed common
+    // controls). addWin32ResourceFile compiles app.rc with `zig rc` and is a
+    // no-op for non-COFF (macOS/Linux) targets.
+    app_mod.addWin32ResourceFile(.{ .file = b.path("app.rc") });
     const exe = b.addExecutable(.{
         .name = app_exe_name,
         .root_module = app_mod,
@@ -165,6 +169,7 @@ pub fn build(b: *std.Build) void {
         const package_app_mod = localModule(b, target, package_optimize, "src/main.zig");
         package_app_mod.addImport("native_sdk", package_sdk_mod);
         package_app_mod.addImport("runner", package_runner_mod);
+        package_app_mod.addWin32ResourceFile(.{ .file = b.path("app.rc") });
         const built = b.addExecutable(.{
             .name = app_exe_name,
             .root_module = package_app_mod,

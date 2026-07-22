@@ -1,0 +1,5 @@
+// Embed app.manifest as the process application manifest (RT_MANIFEST).
+// Resource ID 1 with type 24 (RT_MANIFEST) is the manifest the loader reads
+// at process creation, before any code runs. addWin32ResourceFile compiles
+// this with `zig rc` and links the resource; it is a no-op off Windows.
+1 24 "app.manifest"
