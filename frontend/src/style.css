@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* The live preview scales large SVGs to fit its box; the downloaded file
+   keeps the real dimensions. */
+.preview svg {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  width: auto;
+}
