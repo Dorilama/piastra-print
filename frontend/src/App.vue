@@ -22,16 +22,35 @@ interface LayoutField {
   min?: number;
   unit?: string;
 }
-const layoutFields: LayoutField[] = [
-  { key: "row", label: "Rows", step: 1, min: 0 },
-  { key: "column", label: "Columns", step: 1, min: 0 },
-  { key: "diameter", label: "Diameter", step: 0.1, min: 0, unit: "mm" },
-  { key: "distance", label: "Distance", step: 0.1, min: 0, unit: "mm" },
-  { key: "rulerStep", label: "Ruler step", step: 0.1, min: 0, unit: "mm" },
-  { key: "width", label: "Width", step: 0.1, min: 0, unit: "mm" },
-  { key: "height", label: "Height", step: 0.1, min: 0, unit: "mm" },
-  { key: "left", label: "Left", step: 0.1, unit: "mm" },
-  { key: "top", label: "Top", step: 0.1, unit: "mm" },
+interface GeometryGroup {
+  title: string;
+  fields: LayoutField[];
+}
+const geometryGroups: GeometryGroup[] = [
+  {
+    title: "Layout",
+    fields: [
+      { key: "column", label: "Columns", step: 1, min: 0 },
+      { key: "row", label: "Rows", step: 1, min: 0 },
+    ],
+  },
+  {
+    title: "Circle",
+    fields: [
+      { key: "diameter", label: "Diameter", step: 0.1, min: 0, unit: "mm" },
+      { key: "distance", label: "Distance", step: 0.1, min: 0, unit: "mm" },
+      { key: "rulerStep", label: "Ruler step", step: 0.1, min: 0, unit: "mm" },
+      { key: "top", label: "Top", step: 0.1, unit: "mm" },
+      { key: "left", label: "Left", step: 0.1, unit: "mm" },
+    ],
+  },
+  {
+    title: "Border",
+    fields: [
+      { key: "width", label: "Width", step: 0.1, min: 0, unit: "mm" },
+      { key: "height", label: "Height", step: 0.1, min: 0, unit: "mm" },
+    ],
+  },
 ];
 
 interface ZeroApi {
@@ -115,22 +134,25 @@ function reset() {
         </header>
 
         <!-- Geometry -->
-        <section class="bg-base-100 rounded-box shadow p-4">
-          <h2 class="text-sm font-semibold mb-3">Geometry</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <label v-for="f in layoutFields" :key="f.key" class="form-control">
-              <span class="label-text text-xs mb-1 flex justify-between">
-                <span>{{ f.label }}</span>
-                <span v-if="f.unit" class="opacity-50">{{ f.unit }}</span>
-              </span>
-              <input
-                v-model.number="params[f.key]"
-                type="number"
-                :step="f.step"
-                :min="f.min"
-                class="input input-bordered input-sm w-full"
-              />
-            </label>
+        <section class="bg-base-100 rounded-box shadow p-4 space-y-4">
+          <h2 class="text-sm font-semibold">Geometry</h2>
+          <div v-for="g in geometryGroups" :key="g.title">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">{{ g.title }}</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <label v-for="f in g.fields" :key="f.key" class="form-control">
+                <span class="label-text text-xs mb-1 flex justify-between">
+                  <span>{{ f.label }}</span>
+                  <span v-if="f.unit" class="opacity-50">{{ f.unit }}</span>
+                </span>
+                <input
+                  v-model.number="params[f.key]"
+                  type="number"
+                  :step="f.step"
+                  :min="f.min"
+                  class="input input-bordered input-sm w-full"
+                />
+              </label>
+            </div>
           </div>
         </section>
 
@@ -140,18 +162,18 @@ function reset() {
 
           <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
             <input type="checkbox" checked />
-            <div class="collapse-title font-medium flex items-center justify-between pr-4">
+            <div class="collapse-title font-medium flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.border.color }"></span>
               <span>Border</span>
-              <span class="inline-block w-3.5 h-3.5 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.border.color }"></span>
             </div>
             <div class="collapse-content"><StrokeControls v-model="params.border" /></div>
           </div>
 
           <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
             <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center justify-between pr-4">
+            <div class="collapse-title font-medium flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.circles.color }"></span>
               <span>Circles</span>
-              <span class="inline-block w-3.5 h-3.5 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.circles.color }"></span>
             </div>
             <div class="collapse-content space-y-3">
               <StrokeControls v-model="params.circles" />
@@ -171,18 +193,18 @@ function reset() {
 
           <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
             <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center justify-between pr-4">
+            <div class="collapse-title font-medium flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.center.color }"></span>
               <span>Center <span class="opacity-50 font-normal">(crosshair)</span></span>
-              <span class="inline-block w-3.5 h-3.5 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.center.color }"></span>
             </div>
             <div class="collapse-content"><StrokeControls v-model="params.center" /></div>
           </div>
 
           <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
             <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center justify-between pr-4">
+            <div class="collapse-title font-medium flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.ruler.color }"></span>
               <span>Ruler</span>
-              <span class="inline-block w-3.5 h-3.5 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.ruler.color }"></span>
             </div>
             <div class="collapse-content space-y-3">
               <StrokeControls v-model="params.ruler" />
