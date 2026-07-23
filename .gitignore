@@ -15,3 +15,10 @@ dist-package
 
 # Packaged distribution output
 dist-package/
+
+# Agent / skill scaffolding (per-developer, not project source)
+.agents/
+.claude/
+.codex/
+.github/
+.skills-lock.json
