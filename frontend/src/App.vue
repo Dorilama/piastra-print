@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { reactive, watch, computed, ref } from "vue";
+import { reactive, watch, computed, ref, onMounted } from "vue";
 import { buildSvg, defaultParams, type Params } from "./lib/svg.js";
 import { loadConfig, saveConfig, mergeConfig } from "./lib/config.js";
-import { setTheme, type Theme } from "./lib/theme.js";
-import { toast } from "./lib/toast.js";
-import { APP_VERSION } from "./lib/version.js";
 import StrokeControls from "./components/StrokeControls.vue";
 import ToastHost from "./components/ToastHost.vue";
+import { setTheme, type Theme } from "./lib/theme.js";
+import { toast, dismiss } from "./lib/toast.js";
+import { checkAndApplyUpdate } from "./lib/updater.js";
 
 // Restore the last-used configuration across relaunches (localStorage).
 const params = reactive<Params>(loadConfig());
@@ -21,6 +21,7 @@ const cellCount = computed(
 
 const importInput = ref<HTMLInputElement | null>(null);
 const settingsDialog = ref<HTMLDialogElement | null>(null);
+const updateRunning = ref(false);
 const theme = ref<Theme>(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 
 interface LayoutField {
@@ -127,10 +128,39 @@ function onImportFile(e: Event) {
   input.value = "";
 }
 
-// No update source is configured yet: report the installed version as current.
+// Self-update: silent check on launch; manual from the Settings modal. Outcomes
+// surface as toasts (fixed, no layout shift) instead of an inline alert.
+async function runUpdate(manual: boolean) {
+  if (updateRunning.value) return;
+  updateRunning.value = true;
+  const checkingId = manual ? toast("Checking for updates…", "info") : undefined;
+  const outcome = await checkAndApplyUpdate();
+  if (checkingId !== undefined) dismiss(checkingId);
+  updateRunning.value = false;
+  switch (outcome.status) {
+    case "not-configured":
+      if (manual) toast("No update server configured", "error");
+      break;
+    case "up-to-date":
+      if (manual) toast(`Up to date (v${outcome.version})`, "success");
+      break;
+    case "applied":
+      toast(
+        outcome.action === "reload"
+          ? `Updated to v${outcome.version} — reloading…`
+          : `Updated to v${outcome.version} — restart to finish`,
+        "success",
+      );
+      break;
+    case "error":
+      if (manual) toast(outcome.message, "error");
+      break;
+  }
+}
+
 function checkUpdates() {
   settingsDialog.value?.close();
-  toast(`Piastra Print v${APP_VERSION} is up to date`, "success");
+  runUpdate(true);
 }
 
 function reset() {
@@ -143,6 +173,10 @@ function toggleTheme() {
   theme.value = next;
   setTheme(next);
 }
+
+onMounted(() => {
+  runUpdate(false);
+});
 </script>
 
 <template>
@@ -280,7 +314,7 @@ function toggleTheme() {
       <div class="modal-box">
         <h3 class="text-lg font-bold mb-3">Settings</h3>
         <div class="space-y-1">
-          <button class="btn btn-ghost w-full justify-start" @click="checkUpdates">Update</button>
+          <button class="btn btn-ghost w-full justify-start" :disabled="updateRunning" @click="checkUpdates">Update</button>
           <button class="btn btn-ghost w-full justify-start" @click="triggerImport">Import</button>
           <button class="btn btn-ghost w-full justify-start" @click="exportConfig">Export</button>
         </div>

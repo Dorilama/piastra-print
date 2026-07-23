@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineModel } from "vue";
 import type { StrokeStyle } from "../lib/svg.js";
 
 // Two-way bound to a StrokeStyle group on the parent (params.border, etc.).
