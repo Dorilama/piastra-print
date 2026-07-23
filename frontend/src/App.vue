@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive, watch, computed, ref } from "vue";
+import { reactive, watch, computed, ref, onMounted } from "vue";
 import { buildSvg, defaultParams, type Params } from "./lib/svg.js";
 import { loadConfig, saveConfig, mergeConfig } from "./lib/config.js";
 import StrokeControls from "./components/StrokeControls.vue";
 import { setTheme, type Theme } from "./lib/theme.js";
+import { checkAndApplyUpdate } from "./lib/updater.js";
 
 // Restore the last-used configuration across relaunches (localStorage).
 const params = reactive<Params>(loadConfig());
@@ -115,6 +116,57 @@ function toggleTheme() {
   theme.value = next;
   setTheme(next);
 }
+// --- Self-update: silent auto-check on launch + manual "Check for updates" ---
+const updateState = ref<{ running: boolean; msg: string; tone: "" | "info" | "success" | "error" }>({
+  running: false,
+  msg: "",
+  tone: "",
+});
+
+async function runUpdate(manual: boolean) {
+  if (updateState.value.running) return;
+  updateState.value = { running: true, msg: manual ? "Checking…" : "", tone: "info" };
+  const outcome = await checkAndApplyUpdate((m) => {
+    updateState.value.msg = m;
+  });
+  switch (outcome.status) {
+    case "not-configured":
+      updateState.value = {
+        running: false,
+        msg: manual ? "No update server configured." : "",
+        tone: manual ? "error" : "",
+      };
+      break;
+    case "up-to-date":
+      updateState.value = {
+        running: false,
+        msg: manual ? `Up to date (v${outcome.version}).` : "",
+        tone: manual ? "success" : "",
+      };
+      break;
+    case "applied":
+      updateState.value = {
+        running: false,
+        msg:
+          outcome.action === "reload"
+            ? `Updated to v${outcome.version} — reloading…`
+            : `Updated to v${outcome.version} — restart the app to finish.`,
+        tone: "success",
+      };
+      break;
+    case "error":
+      updateState.value = {
+        running: false,
+        msg: manual ? outcome.message : "",
+        tone: manual ? "error" : "",
+      };
+      break;
+  }
+}
+
+onMounted(() => {
+  runUpdate(false);
+});
 </script>
 
 <template>
@@ -132,6 +184,9 @@ function toggleTheme() {
               <svg v-if="theme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7m12.72 0l-.7-.7M6.34 6.34l-.7-.7M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
             </button>
+            <button class="btn btn-ghost btn-sm btn-circle" @click="runUpdate(true)" :disabled="updateState.running" title="Check for updates" aria-label="Check for updates">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
+            </button>
             <button class="btn btn-ghost btn-sm" @click="importInput?.click()">Import</button>
             <button class="btn btn-ghost btn-sm" @click="exportConfig">Export</button>
             <button class="btn btn-ghost btn-sm" @click="reset">Reset</button>
@@ -144,6 +199,10 @@ function toggleTheme() {
             @change="onImportFile"
           />
         </header>
+        <div v-if="updateState.msg" class="alert alert-sm py-2" :class="updateState.tone === 'error' ? 'alert-error' : updateState.tone === 'success' ? 'alert-success' : 'alert-info'">
+          <span class="text-xs">{{ updateState.msg }}</span>
+          <button v-if="!updateState.running" class="btn btn-ghost btn-xs btn-circle ml-auto" @click="updateState.msg = ''" aria-label="Dismiss">✕</button>
+        </div>
 
         <!-- Geometry -->
         <section class="bg-base-100 rounded-box shadow p-4 space-y-4">

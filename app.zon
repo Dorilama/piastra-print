@@ -7,6 +7,15 @@
     .platforms = .{ "macos", "linux", "windows" },
     .permissions = .{},
     .capabilities = .{ "webview", "js_bridge" },
+    .bridge = .{
+        .commands = .{
+            .{ .name = "app.writeSvg", .origins = .{ "zero://app" } },
+            .{ .name = "app.getUpdateInfo", .origins = .{ "zero://app" } },
+            .{ .name = "app.updateBegin", .origins = .{ "zero://app" } },
+            .{ .name = "app.updateWrite", .origins = .{ "zero://app" } },
+            .{ .name = "app.updateCommit", .origins = .{ "zero://app" } },
+        },
+    },
     .frontend = .{
         .dist ="frontend/dist",
         .entry = "index.html",
