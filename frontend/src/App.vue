@@ -14,15 +14,20 @@ watch(params, () => saveConfig(params), { deep: true });
 
 const svgDoc = computed(() => buildSvg(params));
 // Drop the <?xml?> prolog for the preview (it parses as a bogus comment).
-const previewSvg = computed(() => svgDoc.value.replace(/<\?xml[\s\S]*?\?>\s*/, ""));
+const previewSvg = computed(() =>
+  svgDoc.value.replace(/<\?xml[\s\S]*?\?>\s*/, ""),
+);
 const cellCount = computed(
-  () => `${Math.max(0, Math.round(params.row))} × ${Math.max(0, Math.round(params.column))} cells`,
+  () =>
+    `${Math.max(0, Math.round(params.row))} × ${Math.max(0, Math.round(params.column))} cells`,
 );
 
 const importInput = ref<HTMLInputElement | null>(null);
 const settingsDialog = ref<HTMLDialogElement | null>(null);
 const updateRunning = ref(false);
-const theme = ref<Theme>(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+const theme = ref<Theme>(
+  document.documentElement.dataset.theme === "dark" ? "dark" : "light",
+);
 
 interface LayoutField {
   key: keyof Params;
@@ -98,7 +103,9 @@ async function download() {
 function exportConfig() {
   settingsDialog.value?.close();
   const json = JSON.stringify(params, null, 2);
-  const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  const url = URL.createObjectURL(
+    new Blob([json], { type: "application/json" }),
+  );
   const a = document.createElement("a");
   a.href = url;
   a.download = "piastra-print-config.json";
@@ -133,7 +140,9 @@ function onImportFile(e: Event) {
 async function runUpdate(manual: boolean) {
   if (updateRunning.value) return;
   updateRunning.value = true;
-  const checkingId = manual ? toast("Checking for updates…", "info") : undefined;
+  const checkingId = manual
+    ? toast("Checking for updates…", "info")
+    : undefined;
   const outcome = await checkAndApplyUpdate();
   if (checkingId !== undefined) dismiss(checkingId);
   updateRunning.value = false;
@@ -187,18 +196,86 @@ onMounted(() => {
         <header class="flex items-start justify-between gap-4">
           <div>
             <h1 class="text-2xl font-bold">Piastra Print</h1>
-            <p class="text-base-content/60 text-sm">Grid generator — geometry and stroke styles, fully editable.</p>
+            <p class="text-base-content/60 text-sm">
+              Grid generator — geometry and stroke styles, fully editable.
+            </p>
           </div>
           <div class="flex gap-1">
-            <button class="btn btn-ghost btn-sm btn-circle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'" aria-label="Toggle color theme">
-              <svg v-if="theme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7m12.72 0l-.7-.7M6.34 6.34l-.7-.7M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              @click="toggleTheme"
+              :title="
+                theme === 'dark'
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode'
+              "
+              aria-label="Toggle color theme"
+            >
+              <svg
+                v-if="theme === 'dark'"
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7m12.72 0l-.7-.7M6.34 6.34l-.7-.7M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+                />
+              </svg>
             </button>
-            <button class="btn btn-ghost btn-sm btn-circle" @click="settingsDialog?.showModal()" title="Settings" aria-label="Settings">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8a4 4 0 100 8 4 4 0 000-8z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              @click="settingsDialog?.showModal()"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8a4 4 0 100 8 4 4 0 000-8z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
+                />
+              </svg>
             </button>
           </div>
-          <input ref="importInput" type="file" accept="application/json,.json" class="hidden" @change="onImportFile" />
+          <input
+            ref="importInput"
+            type="file"
+            accept="application/json,.json"
+            class="hidden"
+            @change="onImportFile"
+          />
         </header>
 
         <!-- Geometry -->
@@ -208,14 +285,24 @@ onMounted(() => {
             <button class="btn btn-ghost btn-xs" @click="reset">Reset</button>
           </div>
           <div v-for="g in geometryGroups" :key="g.title">
-            <h3 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">{{ g.title }}</h3>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2"
+            >
+              {{ g.title }}
+            </h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <label v-for="f in g.fields" :key="f.key" class="form-control">
                 <span class="label-text text-xs mb-1 flex justify-between">
                   <span>{{ f.label }}</span>
                   <span v-if="f.unit" class="opacity-50">{{ f.unit }}</span>
                 </span>
-                <input v-model.number="params[f.key]" type="number" :step="f.step" :min="f.min" class="input input-bordered input-sm w-full" />
+                <input
+                  v-model.number="params[f.key]"
+                  type="number"
+                  :step="f.step"
+                  :min="f.min"
+                  class="input input-bordered input-sm w-full"
+                />
               </label>
             </div>
           </div>
@@ -225,63 +312,118 @@ onMounted(() => {
         <section class="bg-base-100 rounded-box shadow p-4 space-y-2">
           <h2 class="text-sm font-semibold mb-1">Stroke styles</h2>
 
-          <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
+          <div
+            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
+          >
             <input type="checkbox" checked />
             <div class="collapse-title font-medium flex items-center gap-2">
-              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.border.color }"></span>
+              <span
+                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
+                :style="{ backgroundColor: params.border.color }"
+              ></span>
               <span>Border</span>
             </div>
-            <div class="collapse-content"><StrokeControls v-model="params.border" /></div>
+            <div class="collapse-content">
+              <StrokeControls v-model="params.border" />
+            </div>
           </div>
 
-          <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
+          <div
+            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
+          >
             <input type="checkbox" />
             <div class="collapse-title font-medium flex items-center gap-2">
-              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.circles.color }"></span>
+              <span
+                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
+                :style="{ backgroundColor: params.circles.color }"
+              ></span>
               <span>Circles</span>
             </div>
             <div class="collapse-content space-y-3">
               <StrokeControls v-model="params.circles" />
               <label class="label cursor-pointer justify-start gap-3 py-1">
-                <input type="checkbox" class="toggle toggle-sm" v-model="params.circles.alternate" />
-                <span class="label-text">Alternate two colors (checkerboard)</span>
+                <input
+                  type="checkbox"
+                  class="toggle toggle-sm"
+                  v-model="params.circles.alternate"
+                />
+                <span class="label-text"
+                  >Alternate two colors (checkerboard)</span
+                >
               </label>
               <div v-if="params.circles.alternate" class="pl-1">
                 <span class="label-text text-xs block mb-1">Second color</span>
                 <div class="flex gap-1 items-center">
-                  <input type="color" v-model="params.circles.colorAlt" class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100" />
-                  <input type="text" v-model="params.circles.colorAlt" class="input input-bordered input-sm w-24 font-mono text-xs uppercase" />
+                  <input
+                    type="color"
+                    v-model="params.circles.colorAlt"
+                    class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100"
+                  />
+                  <input
+                    type="text"
+                    v-model="params.circles.colorAlt"
+                    class="input input-bordered input-sm w-24 font-mono text-xs uppercase"
+                  />
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
+          <div
+            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
+          >
             <input type="checkbox" />
             <div class="collapse-title font-medium flex items-center gap-2">
-              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.center.color }"></span>
-              <span>Center <span class="opacity-50 font-normal">(crosshair)</span></span>
+              <span
+                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
+                :style="{ backgroundColor: params.center.color }"
+              ></span>
+              <span
+                >Center
+                <span class="opacity-50 font-normal">(crosshair)</span></span
+              >
             </div>
-            <div class="collapse-content"><StrokeControls v-model="params.center" /></div>
+            <div class="collapse-content">
+              <StrokeControls v-model="params.center" />
+            </div>
           </div>
 
-          <div class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg">
+          <div
+            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
+          >
             <input type="checkbox" />
             <div class="collapse-title font-medium flex items-center gap-2">
-              <span class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20" :style="{ backgroundColor: params.ruler.color }"></span>
+              <span
+                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
+                :style="{ backgroundColor: params.ruler.color }"
+              ></span>
               <span>Ruler</span>
             </div>
             <div class="collapse-content space-y-3">
               <StrokeControls v-model="params.ruler" />
               <label class="label cursor-pointer justify-start gap-3 py-1">
-                <input type="checkbox" class="toggle toggle-sm" v-model="params.ruler.twoColor" />
+                <input
+                  type="checkbox"
+                  class="toggle toggle-sm"
+                  v-model="params.ruler.twoColor"
+                />
                 <span class="label-text">Two colors (left / right)</span>
               </label>
               <div v-if="params.ruler.twoColor" class="pl-1">
-                <span class="label-text text-xs block mb-1">Right-side color</span>
+                <span class="label-text text-xs block mb-1"
+                  >Right-side color</span
+                >
                 <div class="flex gap-1 items-center">
-                  <input type="color" v-model="params.ruler.colorRight" class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100" />
-                  <input type="text" v-model="params.ruler.colorRight" class="input input-bordered input-sm w-24 font-mono text-xs uppercase" />
+                  <input
+                    type="color"
+                    v-model="params.ruler.colorRight"
+                    class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100"
+                  />
+                  <input
+                    type="text"
+                    v-model="params.ruler.colorRight"
+                    class="input input-bordered input-sm w-24 font-mono text-xs uppercase"
+                  />
                 </div>
               </div>
             </div>
@@ -302,10 +444,13 @@ onMounted(() => {
             v-html="previewSvg"
           ></div>
           <p class="text-xs text-base-content/40 mt-1">
-            Preview scales to fit; the downloaded file keeps the real mm dimensions.
+            Preview scales to fit; the downloaded file keeps the real mm
+            dimensions.
           </p>
         </section>
-        <button class="btn btn-primary w-full" @click="download">Download SVG</button>
+        <button class="btn btn-primary w-full" @click="download">
+          Download SVG
+        </button>
       </div>
     </div>
 
@@ -314,9 +459,25 @@ onMounted(() => {
       <div class="modal-box">
         <h3 class="text-lg font-bold mb-3">Settings</h3>
         <div class="space-y-1">
-          <button class="btn btn-ghost w-full justify-start" :disabled="updateRunning" @click="checkUpdates">Update</button>
-          <button class="btn btn-ghost w-full justify-start" @click="triggerImport">Import</button>
-          <button class="btn btn-ghost w-full justify-start" @click="exportConfig">Export</button>
+          <button
+            class="btn btn-ghost w-full justify-start"
+            :disabled="updateRunning"
+            @click="checkUpdates"
+          >
+            Check updates
+          </button>
+          <button
+            class="btn btn-ghost w-full justify-start"
+            @click="triggerImport"
+          >
+            Import Parameters
+          </button>
+          <button
+            class="btn btn-ghost w-full justify-start"
+            @click="exportConfig"
+          >
+            Export Parameters
+          </button>
         </div>
         <div class="modal-action">
           <form method="dialog"><button class="btn btn-sm">Close</button></form>
