@@ -32,6 +32,8 @@ const App = struct {
     // double-clicked GUI app).
     exe_dir_buf: [std.Io.Dir.max_path_bytes]u8 = undefined,
     exe_dir: []const u8 = &.{},
+    // Backing storage for the resolved bundled-dist path (next-to-exe fallback).
+    bundled_dist_buf: [std.Io.Dir.max_path_bytes]u8 = undefined,
 
     fn app(self: *@This()) native_sdk.App {
         return .{
@@ -66,7 +68,22 @@ const App = struct {
             } else |_| {}
         }
         self.overlay_active = false;
-        return native_sdk.frontend.productionSource(.{ .dist = "frontend/dist" });
+        return native_sdk.frontend.productionSource(.{ .dist = self.bundledDistPath() });
+    }
+
+    // Bundled dist: prefer an ABSOLUTE path next to the exe (a packaged app
+    // launched from its own folder — unambiguous for the WebView host), else
+    // "frontend/dist" under the working dir (dev, run from the project root).
+    fn bundledDistPath(self: *@This()) []const u8 {
+        if (self.exe_dir.len > 0) {
+            const abs = std.fmt.bufPrint(&self.bundled_dist_buf, "{s}/frontend/dist", .{self.exe_dir}) catch return "frontend/dist";
+            var idx_buf: [std.Io.Dir.max_path_bytes]u8 = undefined;
+            const idx = std.fmt.bufPrint(&idx_buf, "{s}/index.html", .{abs}) catch return abs;
+            if (std.Io.Dir.cwd().statFile(self.io, idx, .{})) |_| {
+                return abs;
+            } else |_| {}
+        }
+        return "frontend/dist";
     }
 
     // App-defined bridge dispatcher: exposes `app.writeSvg` plus the

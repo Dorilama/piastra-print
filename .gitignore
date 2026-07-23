@@ -11,3 +11,7 @@ frontend/dist/
 Thumbs.db
 *.log
 tmp
+dist-package
+
+# Packaged distribution output
+dist-package/
