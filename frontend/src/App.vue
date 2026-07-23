@@ -7,6 +7,8 @@ import ToastHost from "./components/ToastHost.vue";
 import { setTheme, type Theme } from "./lib/theme.js";
 import { toast, dismiss } from "./lib/toast.js";
 import { checkAndApplyUpdate } from "./lib/updater.js";
+// Version baked into the build by vite (frontend/package.json).
+declare const __APP_VERSION__: string;
 
 // Restore the last-used configuration across relaunches (localStorage).
 const params = reactive<Params>(loadConfig());
@@ -19,7 +21,7 @@ const previewSvg = computed(() =>
 );
 const cellCount = computed(
   () =>
-    `${Math.max(0, Math.round(params.row))} × ${Math.max(0, Math.round(params.column))} cells`,
+    `${Math.max(0, Math.round(params.row))} × ${Math.max(0, Math.round(params.column))}`,
 );
 
 const importInput = ref<HTMLInputElement | null>(null);
@@ -28,6 +30,17 @@ const updateRunning = ref(false);
 const theme = ref<Theme>(
   document.documentElement.dataset.theme === "dark" ? "dark" : "light",
 );
+
+// Hinge compartments: border open by default, the rest folded.
+const styleOpen = reactive<Record<string, boolean>>({
+  border: true,
+  circles: false,
+  center: false,
+  ruler: false,
+});
+function toggleStyle(key: string): void {
+  styleOpen[key] = !styleOpen[key];
+}
 
 interface LayoutField {
   key: keyof Params;
@@ -149,8 +162,8 @@ function onImportFile(e: Event) {
   input.value = "";
 }
 
-// Self-update: silent check on launch; manual from the Settings modal. Outcomes
-// surface as toasts (fixed, no layout shift) instead of an inline alert.
+// Self-update: silent check on launch; manual from the Settings door. Outcomes
+// surface as LED toasts (fixed, no layout shift) instead of inline alerts.
 async function runUpdate(manual: boolean) {
   if (updateRunning.value) return;
   updateRunning.value = true;
@@ -186,6 +199,12 @@ function checkUpdates() {
   runUpdate(true);
 }
 
+// Close the settings door when the backdrop (the dialog element itself, not
+// the door panel) is clicked.
+function onDialogClick() {
+  settingsDialog.value?.close();
+}
+
 const geometryKeys = [
   "row", "column", "diameter", "distance", "rulerStep",
   "width", "height", "left", "top",
@@ -216,32 +235,26 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="min-h-screen w-full bg-base-200 p-4 sm:p-6">
-    <div class="max-w-5xl mx-auto grid lg:grid-cols-2 gap-6 items-start">
-      <!-- Controls -->
-      <div class="space-y-5">
-        <header class="flex items-start justify-between gap-4">
-          <div>
-            <h1 class="text-2xl font-bold">Piastra Print</h1>
-            <p class="text-base-content/60 text-sm">
-              Grid generator — geometry and stroke styles, fully editable.
-            </p>
+  <main class="fp-shell">
+    <div class="fp-device">
+      <div class="fp-deck-plate">
+        <!-- Brand plate -->
+        <header class="fp-brand">
+          <div class="fp-brand-id">
+            <span class="fp-led" aria-hidden="true"></span>
+            <h1 class="fp-wordmark">Piastra Print</h1>
+            <span class="fp-model hidden sm:inline">Precision Grid · mm</span>
           </div>
-          <div class="flex gap-1">
+          <div class="fp-topswitches">
             <button
-              class="btn btn-ghost btn-sm btn-circle"
+              class="fp-chrome fp-chrome--icon"
               @click="toggleTheme"
-              :title="
-                theme === 'dark'
-                  ? 'Switch to light mode'
-                  : 'Switch to dark mode'
-              "
+              :title="theme === 'dark' ? 'Switch to light' : 'Switch to dark'"
               aria-label="Toggle color theme"
             >
               <svg
                 v-if="theme === 'dark'"
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -256,7 +269,6 @@ onMounted(() => {
               <svg
                 v-else
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -270,236 +282,243 @@ onMounted(() => {
               </svg>
             </button>
             <button
-              class="btn btn-ghost btn-sm btn-circle"
+              class="fp-chrome fp-chrome--icon"
               @click="settingsDialog?.showModal()"
               title="Settings"
               aria-label="Settings"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="1.6" />
-                <circle cx="12" cy="12" r="1.6" />
-                <circle cx="12" cy="19" r="1.6" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="1.7" />
+                <circle cx="12" cy="12" r="1.7" />
+                <circle cx="12" cy="19" r="1.7" />
               </svg>
             </button>
           </div>
-          <input
-            ref="importInput"
-            type="file"
-            accept="application/json,.json"
-            class="hidden"
-            @change="onImportFile"
-          />
         </header>
+        <input
+          ref="importInput"
+          type="file"
+          accept="application/json,.json"
+          class="hidden"
+          @change="onImportFile"
+        />
 
-        <!-- Geometry -->
-        <section class="bg-base-100 rounded-box shadow p-4 space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold">Geometry</h2>
-            <button class="btn btn-ghost btn-xs" @click="resetGeometry">Reset</button>
+        <!-- Body: control deck + display -->
+        <div class="fp-body">
+          <div class="fp-deck">
+            <!-- Geometry -->
+            <section class="fp-panel">
+              <div class="fp-panel-head">
+                <h2 class="fp-panel-label">Geometry</h2>
+                <button class="fp-ghost" @click="resetGeometry">Reset</button>
+              </div>
+              <div v-for="g in geometryGroups" :key="g.title" class="mb-3 last:mb-0">
+                <h3 class="fp-sub">{{ g.title }}</h3>
+                <div class="fp-fields">
+                  <label v-for="f in g.fields" :key="f.key" class="fp-field">
+                    <span class="fp-field-label">
+                      <span>{{ f.label }}</span>
+                      <em v-if="f.unit">{{ f.unit }}</em>
+                    </span>
+                    <input
+                      v-model.number="params[f.key]"
+                      type="number"
+                      :step="f.step"
+                      :min="f.min"
+                      class="fp-readout"
+                    />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Stroke styles (hinged compartments) -->
+            <section class="fp-panel">
+              <div class="fp-panel-head">
+                <h2 class="fp-panel-label">Stroke Styles</h2>
+                <button class="fp-ghost" @click="resetStyles">Reset</button>
+              </div>
+              <div class="flex flex-col gap-2">
+                <!-- Border -->
+                <div class="fp-hinge" :data-open="styleOpen.border">
+                  <button
+                    class="fp-hinge-head"
+                    :aria-expanded="styleOpen.border"
+                    aria-controls="hinge-border"
+                    @click="toggleStyle('border')"
+                  >
+                    <span class="fp-hinge-dot" :style="{ backgroundColor: params.border.color }"></span>
+                    <span class="fp-hinge-name">Border</span>
+                    <svg class="fp-hinge-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div v-show="styleOpen.border" id="hinge-border" class="fp-hinge-body">
+                    <StrokeControls v-model="params.border" />
+                  </div>
+                </div>
+
+                <!-- Circles -->
+                <div class="fp-hinge" :data-open="styleOpen.circles">
+                  <button
+                    class="fp-hinge-head"
+                    :aria-expanded="styleOpen.circles"
+                    aria-controls="hinge-circles"
+                    @click="toggleStyle('circles')"
+                  >
+                    <span class="fp-hinge-dot" :style="{ backgroundColor: params.circles.color }"></span>
+                    <span class="fp-hinge-name">Circles</span>
+                    <svg class="fp-hinge-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div v-show="styleOpen.circles" id="hinge-circles" class="fp-hinge-body space-y-3">
+                    <StrokeControls v-model="params.circles" />
+                    <div class="fp-toggle-row">
+                      <button
+                        class="fp-toggle"
+                        role="switch"
+                        :aria-checked="params.circles.alternate"
+                        @click="params.circles.alternate = !params.circles.alternate"
+                      >
+                        <span class="fp-toggle-thumb"></span>
+                      </button>
+                      <span class="fp-toggle-text">Alternate two colors (checkerboard)</span>
+                    </div>
+                    <div v-if="params.circles.alternate">
+                      <label class="fp-field">
+                        <span class="fp-field-label"><span>Second color</span></span>
+                        <div class="fp-slot">
+                          <input type="color" v-model="params.circles.colorAlt" class="fp-swatch" aria-label="Second circle color" />
+                          <input type="text" v-model="params.circles.colorAlt" class="fp-readout" aria-label="Second circle color hex" />
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Center -->
+                <div class="fp-hinge" :data-open="styleOpen.center">
+                  <button
+                    class="fp-hinge-head"
+                    :aria-expanded="styleOpen.center"
+                    aria-controls="hinge-center"
+                    @click="toggleStyle('center')"
+                  >
+                    <span class="fp-hinge-dot" :style="{ backgroundColor: params.center.color }"></span>
+                    <span class="fp-hinge-name">Center <small>crosshair</small></span>
+                    <svg class="fp-hinge-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div v-show="styleOpen.center" id="hinge-center" class="fp-hinge-body">
+                    <StrokeControls v-model="params.center" />
+                  </div>
+                </div>
+
+                <!-- Ruler -->
+                <div class="fp-hinge" :data-open="styleOpen.ruler">
+                  <button
+                    class="fp-hinge-head"
+                    :aria-expanded="styleOpen.ruler"
+                    aria-controls="hinge-ruler"
+                    @click="toggleStyle('ruler')"
+                  >
+                    <span class="fp-hinge-dot" :style="{ backgroundColor: params.ruler.color }"></span>
+                    <span class="fp-hinge-name">Ruler</span>
+                    <svg class="fp-hinge-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div v-show="styleOpen.ruler" id="hinge-ruler" class="fp-hinge-body space-y-3">
+                    <StrokeControls v-model="params.ruler" />
+                    <div class="fp-toggle-row">
+                      <button
+                        class="fp-toggle"
+                        role="switch"
+                        :aria-checked="params.ruler.twoColor"
+                        @click="params.ruler.twoColor = !params.ruler.twoColor"
+                      >
+                        <span class="fp-toggle-thumb"></span>
+                      </button>
+                      <span class="fp-toggle-text">Two colors (left / right)</span>
+                    </div>
+                    <div v-if="params.ruler.twoColor">
+                      <label class="fp-field">
+                        <span class="fp-field-label"><span>Right-side color</span></span>
+                        <div class="fp-slot">
+                          <input type="color" v-model="params.ruler.colorRight" class="fp-swatch" aria-label="Right-side ruler color" />
+                          <input type="text" v-model="params.ruler.colorRight" class="fp-readout" aria-label="Right-side ruler color hex" />
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-          <div v-for="g in geometryGroups" :key="g.title">
-            <h3
-              class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2"
-            >
-              {{ g.title }}
-            </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <label v-for="f in g.fields" :key="f.key" class="form-control">
-                <span class="label-text text-xs mb-1 flex justify-between">
-                  <span>{{ f.label }}</span>
-                  <span v-if="f.unit" class="opacity-50">{{ f.unit }}</span>
+
+          <!-- Display -->
+          <div class="fp-stage">
+            <div class="fp-display">
+              <div class="fp-display-bar">
+                <span class="fp-display-tag">
+                  <span class="fp-rec" aria-hidden="true"></span>
+                  Live Preview
                 </span>
-                <input
-                  v-model.number="params[f.key]"
-                  type="number"
-                  :step="f.step"
-                  :min="f.min"
-                  class="input input-bordered input-sm w-full"
-                />
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- Stroke styles (accordion) -->
-        <section class="bg-base-100 rounded-box shadow p-4 space-y-2">
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold">Stroke styles</h2>
-            <button class="btn btn-ghost btn-xs" @click="resetStyles">Reset</button>
-          </div>
-
-          <div
-            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
-          >
-            <input type="checkbox" checked />
-            <div class="collapse-title font-medium flex items-center gap-2">
-              <span
-                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
-                :style="{ backgroundColor: params.border.color }"
-              ></span>
-              <span>Border</span>
-            </div>
-            <div class="collapse-content">
-              <StrokeControls v-model="params.border" />
-            </div>
-          </div>
-
-          <div
-            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
-          >
-            <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center gap-2">
-              <span
-                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
-                :style="{ backgroundColor: params.circles.color }"
-              ></span>
-              <span>Circles</span>
-            </div>
-            <div class="collapse-content space-y-3">
-              <StrokeControls v-model="params.circles" />
-              <label class="label cursor-pointer justify-start gap-3 py-1">
-                <input
-                  type="checkbox"
-                  class="toggle toggle-sm"
-                  v-model="params.circles.alternate"
-                />
-                <span class="label-text"
-                  >Alternate two colors (checkerboard)</span
-                >
-              </label>
-              <div v-if="params.circles.alternate" class="pl-1">
-                <span class="label-text text-xs block mb-1">Second color</span>
-                <div class="flex gap-1 items-center">
-                  <input
-                    type="color"
-                    v-model="params.circles.colorAlt"
-                    class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100"
-                  />
-                  <input
-                    type="text"
-                    v-model="params.circles.colorAlt"
-                    class="input input-bordered input-sm w-24 font-mono text-xs uppercase"
-                  />
-                </div>
+                <span class="fp-meter"><b class="fp-meter-readout">{{ cellCount }}</b> cells</span>
               </div>
+              <div class="fp-display-face" v-html="previewSvg"></div>
+              <p class="fp-caption">
+                Preview scales to fit; the saved file keeps the real mm dimensions.
+              </p>
             </div>
+            <button class="fp-action" @click="download">
+              <span class="fp-action-led" aria-hidden="true"></span>
+              Download SVG
+            </button>
           </div>
-
-          <div
-            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
-          >
-            <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center gap-2">
-              <span
-                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
-                :style="{ backgroundColor: params.center.color }"
-              ></span>
-              <span
-                >Center
-                <span class="opacity-50 font-normal">(crosshair)</span></span
-              >
-            </div>
-            <div class="collapse-content">
-              <StrokeControls v-model="params.center" />
-            </div>
-          </div>
-
-          <div
-            class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
-          >
-            <input type="checkbox" />
-            <div class="collapse-title font-medium flex items-center gap-2">
-              <span
-                class="inline-block w-3 h-3 rounded-full ring-1 ring-base-content/20"
-                :style="{ backgroundColor: params.ruler.color }"
-              ></span>
-              <span>Ruler</span>
-            </div>
-            <div class="collapse-content space-y-3">
-              <StrokeControls v-model="params.ruler" />
-              <label class="label cursor-pointer justify-start gap-3 py-1">
-                <input
-                  type="checkbox"
-                  class="toggle toggle-sm"
-                  v-model="params.ruler.twoColor"
-                />
-                <span class="label-text">Two colors (left / right)</span>
-              </label>
-              <div v-if="params.ruler.twoColor" class="pl-1">
-                <span class="label-text text-xs block mb-1"
-                  >Right-side color</span
-                >
-                <div class="flex gap-1 items-center">
-                  <input
-                    type="color"
-                    v-model="params.ruler.colorRight"
-                    class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100"
-                  />
-                  <input
-                    type="text"
-                    v-model="params.ruler.colorRight"
-                    class="input input-bordered input-sm w-24 font-mono text-xs uppercase"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Preview -->
-      <div class="space-y-3 lg:sticky lg:top-6">
-        <section class="bg-base-100 rounded-box shadow p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h2 class="text-sm font-semibold">Live preview</h2>
-            <span class="text-xs text-base-content/50">{{ cellCount }}</span>
-          </div>
-          <div
-            class="preview border border-base-300 rounded-box flex items-center justify-center overflow-hidden p-3"
-            style="background: #fff; height: 360px"
-            v-html="previewSvg"
-          ></div>
-          <p class="text-xs text-base-content/40 mt-1">
-            Preview scales to fit; the downloaded file keeps the real mm
-            dimensions.
-          </p>
-        </section>
-        <button class="btn btn-primary w-full" @click="download">
-          Download SVG
-        </button>
+        </div>
       </div>
     </div>
 
-    <!-- Settings -->
-    <dialog ref="settingsDialog" class="modal">
-      <div class="modal-box">
-        <h3 class="text-lg font-bold mb-3">Settings</h3>
-        <div class="space-y-1">
-          <button
-            class="btn btn-ghost w-full justify-start"
-            :disabled="updateRunning"
-            @click="checkUpdates"
-          >
-            Check updates
-          </button>
-          <button
-            class="btn btn-ghost w-full justify-start"
-            @click="triggerImport"
-          >
-            Import Parameters
-          </button>
-          <button
-            class="btn btn-ghost w-full justify-start"
-            @click="exportConfig"
-          >
-            Export Parameters
-          </button>
+    <!-- Settings (cassette door) -->
+    <dialog ref="settingsDialog" class="fp-modal" @click.self="onDialogClick">
+      <div class="fp-door">
+        <div class="fp-door-head">
+          <span class="fp-door-title">Settings</span>
+          <form method="dialog">
+            <button class="fp-chrome fp-chrome--icon" aria-label="Close settings">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </form>
         </div>
-        <div class="modal-action">
-          <form method="dialog"><button class="btn btn-sm">Close</button></form>
+        <div class="fp-door-body">
+          <button class="fp-door-row" :disabled="updateRunning" @click="checkUpdates">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6M20 9A8 8 0 006 5.3L4 8M4 15a8 8 0 0014 3.7l2-2.7" />
+            </svg>
+            <span>Check for updates</span>
+            <small>{{ updateRunning ? "···" : `v${__APP_VERSION__}` }}</small>
+          </button>
+          <button class="fp-door-row" @click="triggerImport">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 3v12m0 0l-4-4m4 4l4-4" />
+            </svg>
+            <span>Import parameters</span>
+            <small>JSON</small>
+          </button>
+          <button class="fp-door-row" @click="exportConfig">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15V3M8 7l4-4 4 4M4 14v5a1 1 0 001 1h14a1 1 0 001-1v-5" />
+            </svg>
+            <span>Export parameters</span>
+            <small>JSON</small>
+          </button>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
 
     <!-- Notifications (fixed; no layout shift) -->

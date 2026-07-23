@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-23T00:00:00Z",
+  "title": "Design System: Piastra Print",
+  "extensions": {
+    "colorMeta": {
+      "aluminum-panel":   { "role": "neutral", "displayName": "Brushed Aluminum",   "canonical": "#cfd2d7", "tonalRamp": ["#b6bac1", "#cfd2d7", "#dee1e5"] },
+      "aluminum-deep":    { "role": "neutral", "displayName": "Aluminum Deep",       "canonical": "#b6bac1", "tonalRamp": ["#9ea2a9", "#b6bac1", "#cfd2d7"] },
+      "aluminum-raised":  { "role": "neutral", "displayName": "Aluminum Raised",     "canonical": "#dee1e5", "tonalRamp": ["#cfd2d7", "#dee1e5", "#eef0f3"] },
+      "chassis-beige":    { "role": "neutral", "displayName": "Chassis Beige",       "canonical": "#cdc3ae", "tonalRamp": ["#aaa088", "#cdc3ae", "#ddd4c0"] },
+      "chassis-deep":     { "role": "neutral", "displayName": "Chassis Deep",        "canonical": "#aaa088", "tonalRamp": ["#8f8569", "#aaa088", "#cdc3ae"] },
+      "engraved-ink":     { "role": "neutral", "displayName": "Engraved Ink",        "canonical": "#23241f", "tonalRamp": ["#15140f", "#23241f", "#44453f"] },
+      "display-face":     { "role": "neutral", "displayName": "Display Face",        "canonical": "#f3efe4", "tonalRamp": ["#e9e4d5", "#f3efe4", "#faf8f1"] },
+      "led-amber":        { "role": "primary", "displayName": "Signal Amber",        "canonical": "#ffae3a", "tonalRamp": ["#7a5418", "#ffae3a", "#ffd07a"] },
+      "chrome-light":     { "role": "neutral", "displayName": "Chrome Light",        "canonical": "#f2f4f7", "tonalRamp": ["#c6cad1", "#f2f4f7", "#ffffff"] },
+      "chrome-ink":       { "role": "neutral", "displayName": "Chrome Ink",          "canonical": "#1f201b", "tonalRamp": ["#131311", "#1f201b", "#44453f"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Panel Lettering", "purpose": "Chakra Petch — engraved device labels, wordmark, headings." },
+      "body":    { "displayName": "Body",            "purpose": "Chakra Petch — incidental captions and field labels." },
+      "readout": { "displayName": "LED Readout",     "purpose": "Share Tech Mono — numeric measurement values on readout cells only." }
+    },
+    "shadows": [
+      { "name": "raised-metal",  "value": "0 1px 0 rgba(255,255,255,.5) inset, 0 -1px 0 rgba(0,0,0,.18) inset, 0 2px 4px rgba(20,18,12,.18)", "purpose": "Raised faces, bezel rims, bolted panel relief." },
+      { "name": "recessed-display", "value": "inset 0 2px 6px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.4)", "purpose": "LCD window and numeric readout cells." },
+      { "name": "amber-led-glow", "value": "0 0 6px rgba(255,174,58,.55)", "purpose": "Active readout numerals and the live LED only." },
+      { "name": "pressed", "value": "inset 0 2px 4px rgba(0,0,0,.4)", "purpose": "Active/pressed switches and buttons." }
+    ],
+    "motion": [
+      { "name": "toggle-snap", "value": "cubic-bezier(0.2, 0.9, 0.3, 1)", "purpose": "Chrome toggle and switch snap." },
+      { "name": "hinge-drop",  "value": "cubic-bezier(0.16, 1, 0.3, 1)",  "purpose": "Stroke-style compartment hinge open/close." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "880px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Bolted Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Engraved aluminum sub-plate bolted to the chassis; holds a zone of controls.",
+      "html": "<section class=\"fp-panel\"><h2 class=\"fp-panel-label\">LAYOUT</h2>…</section>",
+      "css": ".fp-panel { background: var(--alu); border: 1px solid var(--chassis-deep); border-radius: 4px; box-shadow: var(--raised-metal); padding: 12px 16px; }"
+    },
+    {
+      "name": "LED Readout Input",
+      "kind": "input",
+      "refersTo": "readout",
+      "description": "Dark inset cell with an amber tabular numeral; the control reads like a digital readout.",
+      "html": "<label class=\"fp-field\"><span class=\"fp-field-label\">Diameter <em>mm</em></span><input class=\"fp-readout\" type=\"number\"/></label>",
+      "css": ".fp-readout { background: var(--display-bezel); color: var(--amber); font-family: 'Share Tech Mono', monospace; border-radius: 2px; box-shadow: var(--recessed-display); }"
+    },
+    {
+      "name": "Chrome Toggle",
+      "kind": "custom",
+      "refersTo": "toggle",
+      "description": "Snap-action switch for boolean options (alternate colors, two-color ruler).",
+      "html": "<button class=\"fp-toggle\" role=\"switch\" aria-checked=\"false\"><span class=\"fp-toggle-thumb\"></span></button>",
+      "css": ".fp-toggle { background: var(--alu-deep); border-radius: 999px; } .fp-toggle[aria-checked=true] { background: var(--amber-soft); }"
+    },
+    {
+      "name": "Action Button",
+      "kind": "button",
+      "refersTo": "action-button",
+      "description": "Big chrome pushbutton — the save/record control beneath the display.",
+      "html": "<button class=\"fp-action\">DOWNLOAD SVG</button>",
+      "css": ".fp-action { background: linear-gradient(180deg, var(--chrome-light), var(--chrome-dark)); color: var(--ink); border-radius: 4px; box-shadow: var(--raised-metal); }"
+    },
+    {
+      "name": "Meter Readout Chip",
+      "kind": "custom",
+      "refersTo": "readout",
+      "description": "Dark inset chip in the display bar showing the live cell count; amber pops in both themes because it sits on display-bezel, never on the light bar.",
+      "html": "<span class=\"fp-meter\"><b class=\"fp-meter-readout\">4 × 6</b> cells</span>",
+      "css": ".fp-meter-readout { background: var(--display-bezel); color: var(--amber); font-family: 'Share Tech Mono', monospace; padding: 1px 7px; border-radius: 3px; box-shadow: var(--recessed-display); text-shadow: var(--amber-led-glow); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Amber Deck",
+    "overview": "Piastra Print is dressed as one cassette-era instrument fascia: a beige chassis holding an aluminum control deck and a backlit LCD. Amber LEDs are the only signal, chrome switches the only controls, engraved caps the only labels. The product's own geometry reads as the instrument's native scale, so what you tune and what you print share one grammar. Density and legibility outrank expression; personality lives in material fidelity — brushed grain, inset bezels, amber that glows only where a reading happens. Light/dark is the same device under two room lights, not light-app/dark-app.",
+    "keyCharacteristics": [
+      "Brushed-aluminum ground framed by beige chassis",
+      "Single amber signal reserved for measurement and live state",
+      "Chrome tactile controls; engraved uppercase labels",
+      "Squared bolted panels with near-zero radius",
+      "One device, two room-lights (lit bench / dim studio)"
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Amber is the only saturated color — readouts, live indicator, active state, focus — under 10% of any viewport.", "section": "colors" },
+      { "name": "The Measurement-Only Rule", "body": "Share Tech Mono is used only for numeric measurement values and counts; labels and headings use Chakra Petch.", "section": "typography" }
+    ],
+    "dos": [
+      "Do render metal with real relief (highlight + shade + offset shadow) and brushed grain via CSS gradients.",
+      "Do spend amber only on readouts, the live indicator, the active state, and focus.",
+      "Do make light/dark the same device under two room lights."
+    ],
+    "donts": [
+      "Don't use flat gray for secondary text — tint it warm.",
+      "Don't put mono on labels or headings — measurement only.",
+      "Don't use large radii, pill cards, nested cards, or illustrated skeuomorphic props."
+    ]
+  }
+}

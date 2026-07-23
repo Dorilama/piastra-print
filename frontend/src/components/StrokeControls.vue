@@ -8,30 +8,33 @@ const model = defineModel<StrokeStyle>({ required: true });
 
 <template>
   <div class="grid grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text text-xs mb-1 block">
-        Thickness <span class="opacity-50">mm</span>
+    <label class="fp-field">
+      <span class="fp-field-label">
+        <span>Thickness</span>
+        <em>mm</em>
       </span>
       <input
         type="number"
         step="0.01"
         min="0"
         v-model.number="model.thickness"
-        class="input input-bordered input-sm w-full"
+        class="fp-readout"
       />
     </label>
-    <label class="form-control">
-      <span class="label-text text-xs mb-1 block">Color</span>
-      <div class="flex gap-1 items-center">
+    <label class="fp-field">
+      <span class="fp-field-label"><span>Color</span></span>
+      <div class="fp-slot">
         <input
           type="color"
           v-model="model.color"
-          class="w-9 h-8 shrink-0 rounded cursor-pointer border border-base-300 bg-base-100"
+          class="fp-swatch"
+          aria-label="Stroke color"
         />
         <input
           type="text"
           v-model="model.color"
-          class="input input-bordered input-sm w-24 font-mono text-xs uppercase"
+          class="fp-readout"
+          aria-label="Stroke color hex"
         />
       </div>
     </label>

@@ -1,13 +1,925 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+
+/* ============================================================
+   PIASTRA PRINT — "The Amber Deck"
+   Direction contract (impeccable new-work, roll 6c14971b):
+   THESIS: the window is one cassette-era instrument fascia, not a
+     card stack; it refuses the generic daisyUI tool dashboard.
+   OWN-WORLD: brushed-aluminum deck in a beige chassis, a single
+     amber signal on dark inset readouts, chrome switches, engraved
+     uppercase labels, squared bolted panels.
+   STORY: the maker powers the deck, reads the meter, dials the mm
+     values, watches the grid glow on the backlit LCD, hits save.
+   FIRST VIEWPORT: brand plate (live LED + wordmark + chrome
+     switches) over a two-region body — bolted control panels left,
+     recessed LCD preview + chrome action button right.
+   FORM: cassette-futurist instrument fascia (chosen over the
+     metrology bench; seed dealt pop-culture-shelf-cassette-futurism-deck).
+   ============================================================ */
+
+:root {
+  /* The Amber Deck — light = device on a lit workbench */
+  --room: #b6b0a3;
+  --room-2: #a39c8d;
+  --alu: #cfd2d7;
+  --alu-deep: #b6bac1;
+  --alu-raised: #e2e5e9;
+  --beige: #cdc3ae;
+  --beige-2: #c0b59c;
+  --beige-deep: #9c9277;
+  --ink: #23241f;
+  --ink-soft: #44453f;
+  --display: #f3efe4;
+  --display-2: #e7e1d2;
+  --display-grid: rgba(35, 36, 31, 0.06);
+  --display-bezel: #16150f;
+  --display-bezel-2: #2a271c;
+  --amber: #ffae3a;
+  --amber-hi: #ffd07a;
+  --amber-dim: #6f4f17;
+  --amber-soft: rgba(255, 174, 58, 0.22);
+  --chrome-light: #f2f4f7;
+  --chrome-mid: #c6cad1;
+  --chrome-dark: #969ba3;
+  /* Chrome is reflective metal in both room lights; its engraved labels
+     are always dark so they stay legible on the light chrome face. */
+  --chrome-ink: #1f201b;
+
+  --raised: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -1px 0 rgba(0, 0, 0, 0.16) inset,
+    0 2px 5px rgba(20, 18, 12, 0.18);
+  --raised-soft: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 -1px 0 rgba(0, 0, 0, 0.1) inset,
+    0 1px 3px rgba(20, 18, 12, 0.14);
+  --recess: inset 0 2px 6px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+  --recess-soft: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  --amber-glow: 0 0 7px rgba(255, 174, 58, 0.6);
+  --pressed: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+
+  --brushed: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0,
+      rgba(255, 255, 255, 0.05) 1px,
+      rgba(0, 0, 0, 0.035) 1px,
+      rgba(0, 0, 0, 0.035) 2px
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(0, 0, 0, 0.1) 100%);
+
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-hinge: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: light;
 }
 
-/* The live preview scales large SVGs to fit its box; the downloaded file
-   keeps the real dimensions. */
-.preview svg {
+[data-theme="dark"] {
+  /* The Amber Deck — dark = same device in a dim studio */
+  --room: #211f1a;
+  --room-2: #181612;
+  --alu: #54585e;
+  --alu-deep: #3b3f44;
+  --alu-raised: #666a70;
+  --beige: #5d5648;
+  --beige-2: #524b3e;
+  --beige-deep: #3c362b;
+  --ink: #e7e3d9;
+  --ink-soft: #d3cfc3;
+  --display: #ece8db;
+  --display-2: #e0dac9;
+  --display-grid: rgba(35, 36, 31, 0.06);
+  --display-bezel: #0d0c08;
+  --display-bezel-2: #211e15;
+  --amber: #ffb84d;
+  --amber-hi: #ffd98a;
+  --amber-dim: #4a3314;
+  --amber-soft: rgba(255, 184, 77, 0.22);
+  --chrome-light: #d6dade;
+  --chrome-mid: #aeb3ba;
+  --chrome-dark: #878d96;
+  --chrome-ink: #131311;
+
+  --raised: 0 1px 0 rgba(255, 255, 255, 0.14) inset, 0 -1px 0 rgba(0, 0, 0, 0.5) inset,
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  --raised-soft: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 -1px 0 rgba(0, 0, 0, 0.4) inset,
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  --recess: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.03);
+  --recess-soft: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+  --amber-glow: 0 0 9px rgba(255, 184, 77, 0.65);
+
+  --brushed: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.035) 0,
+      rgba(255, 255, 255, 0.035) 1px,
+      rgba(0, 0, 0, 0.08) 1px,
+      rgba(0, 0, 0, 0.08) 2px
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.3) 100%);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Chakra Petch", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--room);
+  background-image: radial-gradient(
+      120% 90% at 50% -10%,
+      rgba(255, 255, 255, 0.1),
+      rgba(0, 0, 0, 0) 60%
+    ),
+    radial-gradient(80% 60% at 50% 120%, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- The device shell ---------- */
+.fp-shell {
+  min-height: 100%;
+  width: 100%;
+  padding: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.fp-device {
+  width: 100%;
+  max-width: 1040px;
+  background: var(--beige);
+  background-image: linear-gradient(180deg, var(--beige-2), var(--beige) 8%, var(--beige));
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 -2px 0 rgba(0, 0, 0, 0.18) inset,
+    0 14px 30px rgba(20, 18, 12, 0.4), 0 4px 10px rgba(20, 18, 12, 0.3);
+  border: 1px solid var(--beige-deep);
+}
+
+/* the inner aluminum deck — a flat brushed field, not a raised card, so the
+   bolted panels sit ON the metal rather than nesting inside another card. */
+.fp-deck-plate {
+  background: var(--alu);
+  background-image: var(--brushed);
+  border-radius: 6px;
+  padding: 14px;
+}
+
+/* ---------- Brand plate ---------- */
+.fp-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: var(--alu-deep);
+  background-image: var(--brushed);
+  border: 1px solid var(--beige-deep);
+  box-shadow: var(--raised-soft);
+  margin-bottom: 12px;
+}
+.fp-brand-id {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.fp-led {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--amber);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), var(--amber-glow);
+  flex: none;
+  animation: fp-pulse 2.6s var(--ease-snap) infinite;
+}
+@keyframes fp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+.fp-wordmark {
+  font-weight: 600;
+  font-size: 1.32rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+.fp-model {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  border-left: 1px solid var(--beige-deep);
+  padding-left: 11px;
+}
+.fp-topswitches {
+  display: flex;
+  gap: 7px;
+  flex: none;
+}
+
+/* ---------- Buttons / switches (chrome) ---------- */
+.fp-chrome {
+  appearance: none;
+  border: 1px solid var(--chrome-dark);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--chrome-light), var(--chrome-mid) 55%, var(--chrome-dark));
+  color: var(--chrome-ink);
+  box-shadow: var(--raised);
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.08s var(--ease-snap), box-shadow 0.12s var(--ease-snap),
+    filter 0.12s var(--ease-snap);
+}
+.fp-chrome:hover {
+  filter: brightness(1.04);
+}
+.fp-chrome:active {
+  transform: translateY(1px);
+  box-shadow: var(--pressed);
+}
+.fp-chrome:focus-visible {
+  outline: none;
+  box-shadow: var(--raised), 0 0 0 2px var(--amber), var(--amber-glow);
+}
+.fp-chrome--icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+}
+.fp-chrome--icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ghost/engraved button for secondary actions (reset) — sits on the darker
+   aluminum so theme ink stays high-contrast in both room lights. */
+.fp-ghost {
+  appearance: none;
+  border: 1px solid var(--chrome-dark);
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--alu-deep), var(--alu));
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  box-shadow: var(--raised-soft);
+  cursor: pointer;
+  transition: transform 0.08s var(--ease-snap), box-shadow 0.12s var(--ease-snap);
+}
+.fp-ghost:hover {
+  filter: brightness(1.04);
+}
+.fp-ghost:active {
+  transform: translateY(1px);
+  box-shadow: var(--pressed);
+}
+.fp-ghost:focus-visible {
+  outline: none;
+  box-shadow: var(--raised-soft), 0 0 0 2px var(--amber);
+}
+.fp-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- Bolted panels ---------- */
+.fp-panel {
+  position: relative;
+  background: var(--alu);
+  background-image: var(--brushed);
+  border: 1px solid var(--beige-deep);
+  border-radius: 5px;
+  padding: 13px 14px 14px;
+  box-shadow: var(--raised-soft);
+}
+.fp-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+.fp-panel-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fp-panel-label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 35%, var(--chrome-light), var(--chrome-dark));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 -1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Fields & LED readouts ---------- */
+.fp-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 12px;
+}
+@media (min-width: 560px) {
+  .fp-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.fp-field-label {
+  font-size: 0.73rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.fp-field-label em {
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+.fp-readout {
+  width: 100%;
+  background: var(--display-bezel);
+  background-image: radial-gradient(
+    120% 140% at 50% -20%,
+    var(--display-bezel-2),
+    var(--display-bezel) 60%
+  );
+  color: var(--amber);
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  border: 1px solid #000;
+  border-radius: 3px;
+  padding: 7px 9px;
+  box-shadow: var(--recess);
+  text-shadow: var(--amber-glow);
+  caret-color: var(--amber);
+  transition: box-shadow 0.12s var(--ease-snap);
+}
+.fp-readout::placeholder {
+  color: var(--amber-dim);
+}
+.fp-readout:focus {
+  outline: none;
+  box-shadow: var(--recess), 0 0 0 1px var(--amber), var(--amber-glow);
+}
+.fp-readout::-webkit-inner-spin-button,
+.fp-readout::-webkit-outer-spin-button {
+  opacity: 0.32;
+}
+.fp-readout::-webkit-inner-spin-button {
+  cursor: pointer;
+}
+
+/* ---------- Chrome toggle (boolean switch) ---------- */
+.fp-toggle {
+  appearance: none;
+  width: 46px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--chrome-dark);
+  background: linear-gradient(180deg, var(--alu-deep), var(--chrome-dark));
+  box-shadow: var(--recess-soft);
+  position: relative;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.18s var(--ease-snap), border-color 0.18s var(--ease-snap);
+}
+.fp-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, var(--chrome-light), var(--chrome-mid) 60%, var(--chrome-dark));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.18s var(--ease-snap);
+}
+.fp-toggle[aria-checked="true"] {
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber) 60%, var(--amber-dim));
+  border-color: var(--amber-dim);
+}
+.fp-toggle[aria-checked="true"] .fp-toggle-thumb {
+  transform: translateX(22px);
+}
+.fp-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--recess-soft), 0 0 0 2px var(--amber), var(--amber-glow);
+}
+.fp-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 1px;
+}
+.fp-toggle-text {
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Color slot ---------- */
+.fp-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fp-swatch {
+  appearance: none;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--chrome-dark);
+  border-radius: 4px;
+  background: var(--chrome-light);
+  box-shadow: var(--raised-soft);
+  cursor: pointer;
+  flex: none;
+}
+.fp-swatch::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+.fp-swatch::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  border-radius: 2px;
+}
+.fp-swatch::-moz-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  border-radius: 2px;
+}
+.fp-slot .fp-readout {
+  flex: 1 1 auto;
+  width: auto;
+  text-transform: uppercase;
+}
+
+/* ---------- Hinge compartment (stroke styles) ----------
+   Flush rows separated by hairlines; opening reveals a recessed well cut
+   into the panel (a compartment), not a nested raised card. */
+.fp-hinge {
+  border-bottom: 1px solid var(--beige-deep);
+}
+.fp-hinge:last-child {
+  border-bottom: none;
+}
+.fp-hinge-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+}
+.fp-hinge-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), var(--raised-soft);
+  flex: none;
+}
+.fp-hinge-name {
+  flex: 1 1 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.fp-hinge-name small {
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-left: 5px;
+}
+.fp-hinge-chevron {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--ink-soft);
+  transition: transform 0.26s var(--ease-hinge);
+}
+.fp-hinge[data-open="true"] .fp-hinge-chevron {
+  transform: rotate(180deg);
+}
+.fp-hinge-body {
+  margin: 2px -4px 10px;
+  padding: 13px 4px;
+  background: var(--alu-deep);
+  background-image: var(--brushed);
+}
+
+/* ---------- Display (LCD preview) ---------- */
+.fp-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  position: sticky;
+  top: 18px;
+}
+.fp-display {
+  background: var(--alu-deep);
+  background-image: var(--brushed);
+  border: 1px solid var(--beige-deep);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: var(--raised-soft);
+}
+.fp-display-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 3px 9px;
+}
+.fp-display-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.fp-display-tag .fp-rec {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--amber);
+  box-shadow: var(--amber-glow);
+}
+.fp-meter {
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.03em;
+}
+.fp-meter-readout {
+  display: inline-block;
+  background: var(--display-bezel);
+  color: var(--amber);
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+  font-weight: 400;
+  padding: 1px 7px;
+  margin-right: 2px;
+  border-radius: 3px;
+  box-shadow: var(--recess-soft), inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  text-shadow: var(--amber-glow);
+}
+.fp-display-face {
+  background: var(--display);
+  background-image: linear-gradient(180deg, var(--display), var(--display-2)),
+    repeating-linear-gradient(0deg, var(--display-grid) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--display-grid) 0 1px, transparent 1px 24px);
+  border-radius: 5px;
+  border: 1px solid #000;
+  box-shadow: var(--recess);
+  min-height: 300px;
+  height: clamp(300px, 46vh, 520px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+}
+.fp-display-face svg {
   max-width: 100%;
   max-height: 100%;
-  height: auto;
   width: auto;
+  height: auto;
+}
+.fp-caption {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  margin: 8px 4px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- Primary action (big chrome button) ---------- */
+.fp-action {
+  appearance: none;
+  width: 100%;
+  border: 1px solid var(--chrome-dark);
+  border-radius: 7px;
+  background: linear-gradient(180deg, var(--chrome-light), var(--chrome-mid) 52%, var(--chrome-dark));
+  color: var(--chrome-ink);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 15px 20px;
+  box-shadow: var(--raised);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.08s var(--ease-snap), box-shadow 0.14s var(--ease-snap),
+    filter 0.12s var(--ease-snap);
+}
+.fp-action:hover {
+  filter: brightness(1.04);
+}
+.fp-action:active {
+  transform: translateY(1px);
+  box-shadow: var(--pressed);
+}
+.fp-action:focus-visible {
+  outline: none;
+  box-shadow: var(--raised), 0 0 0 2px var(--amber), var(--amber-glow);
+}
+.fp-action-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--amber);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), var(--amber-glow);
+  flex: none;
+}
+
+/* ---------- Layout body ---------- */
+.fp-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 880px) {
+  .fp-body {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: start;
+  }
+}
+.fp-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.fp-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 2px 1px 7px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Settings (cassette-door modal) ---------- */
+dialog.fp-modal {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+dialog.fp-modal[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+}
+dialog.fp-modal::backdrop {
+  background: rgba(15, 13, 9, 0.55);
+  backdrop-filter: blur(2px);
+}
+.fp-door {
+  width: min(420px, 92vw);
+  background: var(--alu-deep);
+  background-image: var(--brushed);
+  border: 1px solid var(--beige-deep);
+  border-radius: 10px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 18px 44px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: fp-door-in 0.32s var(--ease-hinge);
+  transform-origin: top center;
+}
+@keyframes fp-door-in {
+  from {
+    transform: perspective(900px) rotateX(-12deg) translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.fp-door-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--beige-deep);
+  background: linear-gradient(180deg, var(--alu-raised), var(--alu));
+}
+.fp-door-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.fp-door-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-door-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 13px;
+  border-radius: 6px;
+  background: var(--alu);
+  background-image: var(--brushed);
+  border: 1px solid var(--beige-deep);
+  box-shadow: var(--raised-soft);
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.08s var(--ease-snap), box-shadow 0.12s var(--ease-snap);
+}
+.fp-door-row:hover {
+  filter: brightness(1.03);
+}
+.fp-door-row:active {
+  transform: translateY(1px);
+  box-shadow: var(--pressed);
+}
+.fp-door-row:focus-visible {
+  outline: none;
+  box-shadow: var(--raised-soft), 0 0 0 2px var(--amber);
+}
+.fp-door-row svg {
+  width: 17px;
+  height: 17px;
+  color: var(--ink-soft);
+  flex: none;
+}
+.fp-door-row span {
+  flex: 1 1 auto;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.fp-door-row small {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Toasts (LED status line) ---------- */
+.fp-toasts {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.fp-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px 9px 11px;
+  border-radius: 7px;
+  background: var(--display-bezel);
+  background-image: radial-gradient(120% 140% at 50% -20%, var(--display-bezel-2), var(--display-bezel) 60%);
+  border: 1px solid #000;
+  box-shadow: var(--recess), 0 8px 20px rgba(0, 0, 0, 0.35);
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  animation: fp-toast-in 0.28s var(--ease-hinge);
+}
+@keyframes fp-toast-in {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.fp-toast-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: none;
+}
+.fp-toast[data-type="success"] .fp-toast-led {
+  background: #7cfc8a;
+  box-shadow: 0 0 7px rgba(124, 252, 138, 0.7);
+}
+.fp-toast[data-type="error"] .fp-toast-led {
+  background: #ff5a4d;
+  box-shadow: 0 0 7px rgba(255, 90, 77, 0.7);
+}
+.fp-toast[data-type="info"] .fp-toast-led,
+.fp-toast[data-type="warning"] .fp-toast-led {
+  background: var(--amber);
+  box-shadow: var(--amber-glow);
+}
+.fp-toast-msg {
+  color: var(--amber);
+  text-shadow: var(--amber-glow);
+}
+.fp-toast[data-type="error"] .fp-toast-msg {
+  color: #ff8a7d;
+}
+.fp-toast[data-type="success"] .fp-toast-msg {
+  color: #9dffab;
+}
+.fp-toast-close {
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  opacity: 0.7;
+}
+.fp-toast-close:hover {
+  opacity: 1;
+}
+.fp-toast-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fp-led,
+  .fp-toast,
+  .fp-door {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
