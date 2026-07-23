@@ -77,7 +77,7 @@ writeFileSync(
 );
 writeFileSync(
   join(dist, "_headers"),
-  ["/manifest.json", "  Cache-Control: public, max-age=0, must-revalidate", "  Access-Control-Allow-Origin: *", "/*", "  Access-Control-Allow-Origin: *", ""].join("\n"),
+  ["/manifest.json", "  Cache-Control: public, max-age=0, must-revalidate", "/*", "  Access-Control-Allow-Origin: *", ""].join("\n"),
 );
 
 console.log(`Files in manifest: ${files.length + 1} (${files.join(", ") || "none"}, manifest.json)`);
