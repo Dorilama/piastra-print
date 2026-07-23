@@ -100,18 +100,32 @@ async function download() {
   }
 }
 
-function exportConfig() {
+async function exportConfig() {
   settingsDialog.value?.close();
   const json = JSON.stringify(params, null, 2);
-  const url = URL.createObjectURL(
-    new Blob([json], { type: "application/json" }),
-  );
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "piastra-print-config.json";
-  a.click();
-  URL.revokeObjectURL(url);
-  toast("Exported config", "info");
+  const w = window as Window & { zero?: ZeroApi };
+  try {
+    if (w.zero) {
+      const path = await w.zero.invoke("native-sdk.dialog.saveFile", {
+        title: "Export parameters",
+        defaultName: "piastra-print-config.json",
+      });
+      if (typeof path === "string") {
+        await w.zero.invoke("app.writeSvg", { path, content: json });
+        toast("Exported parameters", "success");
+      }
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "piastra-print-config.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("Exported parameters", "info");
+  } catch {
+    toast("Export failed", "error");
+  }
 }
 
 function triggerImport() {
@@ -172,9 +186,22 @@ function checkUpdates() {
   runUpdate(true);
 }
 
-function reset() {
-  Object.assign(params, defaultParams);
-  toast("Reset to defaults", "info");
+const geometryKeys = [
+  "row", "column", "diameter", "distance", "rulerStep",
+  "width", "height", "left", "top",
+] as const;
+
+function resetGeometry() {
+  for (const key of geometryKeys) params[key] = defaultParams[key];
+  toast("Reset geometry", "info");
+}
+
+function resetStyles() {
+  params.border = { ...defaultParams.border };
+  params.circles = { ...defaultParams.circles };
+  params.center = { ...defaultParams.center };
+  params.ruler = { ...defaultParams.ruler };
+  toast("Reset styles", "info");
 }
 
 function toggleTheme() {
@@ -248,24 +275,10 @@ onMounted(() => {
               title="Settings"
               aria-label="Settings"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 8a4 4 0 100 8 4 4 0 000-8z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="12" cy="19" r="1.6" />
               </svg>
             </button>
           </div>
@@ -282,7 +295,7 @@ onMounted(() => {
         <section class="bg-base-100 rounded-box shadow p-4 space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold">Geometry</h2>
-            <button class="btn btn-ghost btn-xs" @click="reset">Reset</button>
+            <button class="btn btn-ghost btn-xs" @click="resetGeometry">Reset</button>
           </div>
           <div v-for="g in geometryGroups" :key="g.title">
             <h3
@@ -310,7 +323,10 @@ onMounted(() => {
 
         <!-- Stroke styles (accordion) -->
         <section class="bg-base-100 rounded-box shadow p-4 space-y-2">
-          <h2 class="text-sm font-semibold mb-1">Stroke styles</h2>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-sm font-semibold">Stroke styles</h2>
+            <button class="btn btn-ghost btn-xs" @click="resetStyles">Reset</button>
+          </div>
 
           <div
             class="collapse collapse-arrow bg-base-200 border border-base-300 rounded-lg"
